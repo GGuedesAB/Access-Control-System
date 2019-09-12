@@ -1,0 +1,4 @@
+# Compiled code #
+*.o
+*.so
+*.out
