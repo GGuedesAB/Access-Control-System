@@ -3,7 +3,14 @@ import os
 import getpass
 import logging
 import subprocess
+import signal
+import sys
 from time import gmtime, strftime
+
+def interrupt_handler (exception_info):
+	logging.debug('Interrupt signal recieved: %s', str(exception_info))
+	logging.warning('Stopping installation.')
+	exit(2)
 
 def arg_parser():
 	parser = argparse.ArgumentParser(description='Installation script for ACS.')
@@ -14,17 +21,16 @@ def arg_parser():
 	args = parser.parse_args()
 	return args
 
-def _get_system_architecture (args):
+def _get_system_architecture ():
 	get_architecture_cmd = ['uname', '-m']
-	get_architecture_process = subprocess.run(get_architecture_cmd, stdout=subprocess.PIPE)
+	get_architecture_process = subprocess.run(get_architecture_cmd, stdout=subprocess.PIPE, check=True)
 	system_architecture = get_architecture_process.stdout.decode('utf-8').rstrip()
 	return system_architecture
 
-def _is_architecture_supported (args):
+def _is_architecture_supported ():
 	SUPPORTED_ARCHITECTURES = ['x86_64', 'armvl7']
-	my_architecture = _get_system_architecture(args)
-	if args.debug:
-		logging.info('System architecture is %s', my_architecture)
+	my_architecture = _get_system_architecture()
+	logging.info('System architecture is %s', my_architecture)
 	if my_architecture in SUPPORTED_ARCHITECTURES:
 		return True
 	else:
@@ -54,22 +60,22 @@ def _install_packages (args, list_of_packages, stacked_call=False):
 		else:
 			installation_cmd = ['sudo', 'apt-get', '-qq', 'install', '-y']
 		installation_cmd.extend(list_of_packages)
-		logging.info('Installing necessary packages: %s', _command_list_to_str(installation_cmd))
-		installation_cmd_result = subprocess.run(installation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		if installation_cmd_result.returncode != 0:
+		if not stacked_call:
+			logging.info('Installing necessary packages: %s', _command_list_to_str(installation_cmd))
+		else:
+			logging.info('Retrying installation of necessary packages: %s', _command_list_to_str(installation_cmd))
+		try:
+			subprocess.run(installation_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+		except KeyboardInterrupt:
+			interrupt_handler(sys.exc_info())
+		except subprocess.CalledProcessError as installation_error:
 			if not stacked_call:
-				logging.warning ('Could not install packages.\nUpdating apt.')
-				update_result = _update_apt(args)
-				if update_result.returncode == 0:
-					_install_packages(args, list_of_packages, True)
-				else:
-					logging.error('Something went wrong when trying to update apt.')
-					exit (1)
+				logging.warning ('Could not install packages. Updating apt.')
+				_update_apt(args)
+				_install_packages(args, list_of_packages, True)
 			else:
 				logging.error('Something went wrong when trying to install packages.')
-				error_message = installation_cmd_result.stderr
-				error_message = error_message.decode('utf-8')
-				logging.error(error_message)
+				logging.error('Dumping apt error message\n\t%s', installation_error.stderr.decode('utf-8'))
 				exit (1)
 		logging.info('Package installation was successfull!')
 	else:
@@ -82,18 +88,15 @@ def _update_apt (args):
 	else:
 		apt_update_cmd = ['sudo', 'apt-get', '-qq', 'update', '-y']
 	logging.debug('Updating apt: %s', _command_list_to_str(apt_update_cmd))
-	apt_update_result = subprocess.run(apt_update_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	return apt_update_result
+	try:
+		subprocess.run(apt_update_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+	except KeyboardInterrupt:
+		interrupt_handler(sys.exc_info())
+	except subprocess.CalledProcessError as apt_update_error:
+		print_process_error(apt_update_error)
 
-def _check_process_completion (process):
-	if type(process) is subprocess.CompletedProcess:
-		if process.returncode != 0:
-			logging.error('Process failed.')
-			error_message = process.stderr
-			error_message = error_message.decode('utf-8')
-			logging.error(error_message)
-	else:
-		logging.debug('Function returned %s, not a subprocess.', str(process))
+def print_process_error (process):
+		logging.error(process.stderr.decode('utf-8'))
 
 def create_logger (args):
 	log_format = "%(asctime)s - %(levelname)s: %(message)s"
@@ -106,22 +109,28 @@ def create_logger (args):
 		logging.basicConfig(level=logging.WARNING, format=log_format, datefmt=date_format)
 
 def setup_packages (args):
-	if not _is_architecture_supported(args):
+	if not _is_architecture_supported():
 		logging.error('Your system system architecture is not supported.')
 		exit (1)
 	else:
-		my_architecture = _get_system_architecture(args)
+		my_architecture = _get_system_architecture()
 		list_of_packages_needed = _build_list_of_packages(my_architecture)
 		_install_packages(args, list_of_packages_needed)
 
 def make_c_files (args):
 	logging.info('Making C files...')
 	if (args.clean):
-		make = subprocess.run(['make', '--quiet', 'clean'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	make = subprocess.run(['make', '--quiet'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	# Use {try except} here intead
-	_check_process_completion(make)
-	logging.info('C files built up!')
+		try:
+			subprocess.run(['make', '--quiet', 'clean'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+		except subprocess.CalledProcessError as make_error:
+			print_process_error(make_error)
+	try:
+		subprocess.run(['make', '--quiet'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+	except subprocess.CalledProcessError as make_error:
+		logging.error('Could not build C files.')
+		print_process_error(make_error)
+	else:
+		logging.info('C files built up!')
 
 
 def setup_data_base ():
