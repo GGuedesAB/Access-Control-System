@@ -1,4 +1,4 @@
 all:
-	+$(MAKE) -C ../tiny-AES-c
+	+$(MAKE) -C ../encryption
 clean:
-	+$(MAKE) -C ../tiny-AES-c clean
+	+$(MAKE) -C ../encryption clean
