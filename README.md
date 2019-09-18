@@ -1,5 +1,8 @@
 # Sistema de Controle de Acesso
 
+## Link Planilha de Apuração de Horas Trabalhadas e Gráfico de Burn-Down
+https://docs.google.com/spreadsheets/d/1UihpmunBnBeLRJsAMpuaPuoDvKpMd1tuBW4egLVNJ4I/edit#gid=279617827
+
 ## Estórias e tarefas
 
 ##### E1 Como usuário, quero verificar a quais instalações tenho acesso
