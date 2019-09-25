@@ -95,6 +95,12 @@ def _update_apt (args):
 	except subprocess.CalledProcessError as apt_update_error:
 		print_process_error(apt_update_error)
 
+def _call_std_subprocess (command):
+	try:
+		subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+	except subprocess.CalledProcessError as err:
+		print_process_error(err)
+
 def print_process_error (process):
 		logging.error(process.stderr.decode('utf-8'))
 
@@ -119,30 +125,30 @@ def setup_packages (args):
 
 def make_c_files (args):
 	logging.info('Making C files...')
-	if (args.clean):
-		try:
-			subprocess.run(['make', '--quiet', 'clean'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-		except subprocess.CalledProcessError as make_error:
-			print_process_error(make_error)
-	try:
-		subprocess.run(['make', '--quiet'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-	except subprocess.CalledProcessError as make_error:
-		logging.error('Could not build C files.')
-		print_process_error(make_error)
+	if args.clean:
+		_call_std_subprocess(['make', '--quiet', 'clean'])
+	elif not args.clean:
+		_call_std_subprocess(['make', '--quiet'])
 	else:
 		logging.info('C files built up!')
 
-
 def setup_data_base ():
-	# Call data base driver instance here
-	print ('DB')
-
+	logging.info('Setting up database as root, please enter your new password.\n')
+	password = getpass.getpass()
+	SQL_querry = 'DROP USER \'root\'@\'localhost\'; CREATE USER \'root\'@\'localhost\' IDENTIFIED BY \'' + password + '\'; ' + 'GRANT ALL PRIVILEGES ON *.* TO \'root\'@\'localhost\' WITH GRANT OPTION; ' + 'FLUSH PRIVILEGES;'
+	root_cmd = 'sudo su -c \"/bin/sh\"'
+	mysql_cmd = 'mysql -u root -e \"' + SQL_querry + '\"'
+	with subprocess.Popen (root_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True) as root:
+		root.stdin.write(mysql_cmd.encode())
+		root.stdin.close()
+		root.wait()
 
 def main ():
 	args = arg_parser()
 	create_logger(args)
 	setup_packages(args)
 	make_c_files(args)
+	setup_data_base()
 	
 if __name__ == '__main__':
 	main()
