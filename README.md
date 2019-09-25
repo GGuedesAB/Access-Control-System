@@ -7,10 +7,10 @@ https://docs.google.com/spreadsheets/d/1UihpmunBnBeLRJsAMpuaPuoDvKpMd1tuBW4egLVN
 
 ##### E1 Como usuário, quero verificar a quais instalações tenho acesso
 	T1 Implementar autenticação com senha para entrada no sistema [Leone][2hr]	
-	T2 Implementar um banco de dados para controle de acesso e armazenamento de cadastros [Victor][3hr]	
-	T3 Implementar driver de banco de dados em Python [Victor] [3hr]
-	T4 Implementar setup do software no sistema operacional [Gustavo][3hr]	
-	T5 Implementar setup do BD para o sistema [Gustavo][4hr]
+	T2 Implementar o setup do BD em SQL [Victor] [3hr]	
+	T3 Implementar um setup básico dos pacotes do sistema [Gustavo][3hr]	
+	T4 Implementar o setup do MySQL para o sistema [Gustavo][4hr]
+	T5 Validar a integração entre as tarefas 2, 3 e 4 [Gustavo] [3hr]
 	T6 Desenvolver interface gráfica para visualização usando GTK [Gustavo][15hr]
 
 ##### E2 Como usuário, quero meus dados em segurança
@@ -22,7 +22,7 @@ https://docs.google.com/spreadsheets/d/1UihpmunBnBeLRJsAMpuaPuoDvKpMd1tuBW4egLVN
 	T10 Implementar controle de acesso de usuário em Python [Leone][6hr]
 	T11 Inserir níveis de permissão no banco de dados (grupos de acesso) [Victor][1hr]	
 	T12 Inserir instalações no banco de dados [Victor][1hr]
-	T13 Desenvolver interface de comandos primária, para testes [Leone][7hr]
+	T13 Desenvolver interface de comandos para testes [Leone][7hr]
 	T14 Associar operações de administrador a operações do BD [Victor][3hr]
 		(adicionar, editar, remover)->(usuário, grupo de acesso, instalação)
 
