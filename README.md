@@ -9,7 +9,7 @@ https://docs.google.com/spreadsheets/d/1UihpmunBnBeLRJsAMpuaPuoDvKpMd1tuBW4egLVN
 	T1 Implementar autenticação com senha para entrada no sistema [Leone][2hr]	
 	T2 Implementar um banco de dados para controle de acesso e armazenamento de cadastros [Victor][3hr]	
 	T3 Implementar driver de banco de dados em Python [Victor] [3hr]
-	T4 Implementar setup do BD em SQL [Victor][3hr]	
+	T4 Implementar setup do software no sistema operacional [Gustavo][3hr]	
 	T5 Implementar setup do BD para o sistema [Gustavo][4hr]
 	T6 Desenvolver interface gráfica para visualização usando GTK [Gustavo][15hr]
 
