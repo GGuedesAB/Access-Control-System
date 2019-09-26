@@ -132,7 +132,7 @@ def make_c_files (args):
 	else:
 		logging.info('C files built up!')
 
-def setup_data_base ():
+def install_data_base ():
 	logging.info('Setting up database as root, please enter your new password.\n')
 	password = getpass.getpass()
 	SQL_querry = 'DROP USER \'root\'@\'localhost\'; CREATE USER \'root\'@\'localhost\' IDENTIFIED BY \'' + password + '\'; ' + 'GRANT ALL PRIVILEGES ON *.* TO \'root\'@\'localhost\' WITH GRANT OPTION; ' + 'FLUSH PRIVILEGES;'
@@ -148,7 +148,7 @@ def main ():
 	create_logger(args)
 	setup_packages(args)
 	make_c_files(args)
-	setup_data_base()
+	install_data_base()
 	
 if __name__ == '__main__':
 	main()
