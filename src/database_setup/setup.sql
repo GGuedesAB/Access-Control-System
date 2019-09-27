@@ -3,6 +3,7 @@ USE `accontrol`;
 
 CREATE TABLE `groups` (
   `number` int(10) NOT NULL,
+  `description` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
