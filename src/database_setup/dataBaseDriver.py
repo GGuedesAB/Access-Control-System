@@ -3,7 +3,7 @@ import pymysql.cursors
 
 class dataBaseDriver ():
 
-	# Checks if is possible to connect to databse
+	# Checks if possible to connect to databse
 	def __init__(self, host, db_owner, password, db_name):
 		self.debug_mode = False
 		self.host = host
@@ -63,7 +63,7 @@ class dataBaseDriver ():
 		
 			with conn.cursor() as cursor:
 				sql = "INSERT INTO `groups` (`number`,`description`) VALUES (%d,%s)"
-				insert_tuple = (acsgroup.number)
+				insert_tuple = (acsgroup.number, acsgroup.description)
 				result = cursor.execute(sql, insert_tuple)
 				self.DB_print(result)
 				conn.commit()
@@ -153,7 +153,7 @@ class dataBaseDriver ():
 		finally:
 			conn.close()
 	
-		#
+		# User info
 	def retrieve_info_from_name (self, name):
 		try:
 			conn = pymysql.connect(host=self.host,
@@ -179,8 +179,8 @@ class dataBaseDriver ():
 			conn.close()
 			return result
 
-
-	def check_access (self, name):
+		# Access info from MAC
+	def check_access (self, MAC):
 		try:
 			conn = pymysql.connect(host=self.host,
 							       user=self.db_owner,
@@ -191,9 +191,10 @@ class dataBaseDriver ():
 							       cursorclass=pymysql.cursors.DictCursor)
 			
 			with conn.cursor() as cursor:
-				sql = "SELECT `facility_name` FROM `users`,`access` WHERE `users`.`group_number` = `access`.`group_number` AND `name`=%s"
-				select_tuple = (name)
+				sql = "SELECT `facility_name` FROM `users`,`access` WHERE `users`.`group_number` = `access`.`group_number` AND `MAC`=%s"
+				select_tuple = (MAC)
 				cursor.execute(sql, select_tuple)
+				result = cursor.fetchone()
 
 		except Exception as db_error:
 			self.DB_print (db_error)
@@ -201,3 +202,4 @@ class dataBaseDriver ():
 
 		finally:
 			conn.close()
+			return result
