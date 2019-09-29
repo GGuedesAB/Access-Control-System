@@ -6,6 +6,7 @@ import subprocess
 import signal
 import sys
 from time import gmtime, strftime
+import pymysql.cursors
 
 def interrupt_handler (exception_info):
 	logging.debug('Interrupt signal recieved: %s', str(exception_info))
@@ -135,6 +136,7 @@ def make_c_files (args):
 def install_data_base ():
 	logging.info('Setting up database as root, please enter your new password.\n')
 	password = getpass.getpass()
+
 	SQL_querry = 'DROP USER \'root\'@\'localhost\'; CREATE USER \'root\'@\'localhost\' IDENTIFIED BY \'' + password + '\'; ' + 'GRANT ALL PRIVILEGES ON *.* TO \'root\'@\'localhost\' WITH GRANT OPTION; ' + 'FLUSH PRIVILEGES;'
 	root_cmd = 'sudo su -c \"/bin/sh\"'
 	mysql_cmd = 'mysql -u root -e \"' + SQL_querry + '\"'
@@ -142,6 +144,15 @@ def install_data_base ():
 		root.stdin.write(mysql_cmd.encode())
 		root.stdin.close()
 		root.wait()
+
+	SQL_querry = '../database_setup/setup.sql'
+	mysql_cmd = 'mysql -u root -p' + password + ' < ' + SQL_querry
+	
+	try:
+		subprocess.run(mysql_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+	except subprocess.CalledProcessError as err:
+		print_process_error(err)
+	logging.INFO(err.stdout)
 
 def main ():
 	args = arg_parser()
