@@ -152,7 +152,7 @@ def install_data_base ():
 		subprocess.run(mysql_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 	except subprocess.CalledProcessError as err:
 		print_process_error(err)
-	logging.INFO(err.stdout)
+	logging.info(err.stdout)
 
 def main ():
 	args = arg_parser()
