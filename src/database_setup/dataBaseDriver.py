@@ -1,5 +1,6 @@
 import ctypes
 import pymysql.cursors
+from src.database_setup import accessControlUser
 
 class dataBaseDriver ():
 
@@ -31,7 +32,7 @@ class dataBaseDriver ():
 
 	def decrypt_user_info (self, acsuser_info):
 		try:
-			c_decrypt_ = ctypes.cdll.LoadLibrary(r"/home/gustavo/Desktop/EngSoftProj/tiny-AES-c/decrypt.so")
+			c_decrypt_ = ctypes.cdll.LoadLibrary(r"../encryption/decrypt.so")
 			c_decrypt_.decrypt.argtype = ctypes.c_char_p
 			c_decrypt_.decrypt.restype = ctypes.c_char_p
 			if type(acsuser_info) is bytes:
@@ -42,12 +43,6 @@ class dataBaseDriver ():
 				self.DB_print ('Decryption algorithm recieved not byte argument.')
 		except Exception as de:
 			self.DB_print ('DEC_ERROR: \n' + de)
-
-	def print_debug_mode (self):
-		print (str(self.debug_mode))
-
-	def set_debug_mode (self):
-		self.debug_mode = True
 
 	# groups must exist before inserting users
 	def define_new_group(self, acsgroup):
@@ -63,7 +58,7 @@ class dataBaseDriver ():
 		
 			with conn.cursor() as cursor:
 				sql = "INSERT INTO `groups` (`number`,`description`) VALUES (%d,%s)"
-				insert_tuple = (acsgroup.number, acsgroup.description)
+				insert_tuple = (acsgroup.get_number(), acsgroup.get_description())
 				result = cursor.execute(sql, insert_tuple)
 				self.DB_print(result)
 				conn.commit()
@@ -75,7 +70,7 @@ class dataBaseDriver ():
 		finally:
 			conn.close()
 
-	# username and password must be already encrypted (bytes)
+	# password must be already encrypted (bytes)
 	def insert_new_user(self, acsuser):
 		try:
 			conn = pymysql.connect(host=self.host,
@@ -89,7 +84,7 @@ class dataBaseDriver ():
 		
 			with conn.cursor() as cursor:
 				sql = "INSERT INTO `users` (`id`,`name`, `MAC`, `username`, `password`,`group_number`) VALUES (%d,%s,%s,%s,%s,%d)"
-				insert_tuple = (acsuser.id,acsuser.name, acsuser.MAC, acsuser.username, acsuser.password,acsuser.group_number)
+				insert_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number())
 				result = cursor.execute(sql, insert_tuple)
 				self.DB_print(result)
 				conn.commit()
@@ -115,7 +110,7 @@ class dataBaseDriver ():
 		
 			with conn.cursor() as cursor:
 				sql = "INSERT INTO `facilities` (`name`) VALUES (%s)"
-				insert_tuple = (acsfacility.name)
+				insert_tuple = (acsfacility.get_name())
 				result = cursor.execute(sql, insert_tuple)
 				self.DB_print(result)
 				conn.commit()
@@ -141,7 +136,7 @@ class dataBaseDriver ():
 		
 			with conn.cursor() as cursor:
 				sql = "INSERT INTO `access` (`group_number`,`facility_name`) VALUES (%d,%s)"
-				insert_tuple = (acsaccess.group_number,acsaccess.facility_name)
+				insert_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
 				result = cursor.execute(sql, insert_tuple)
 				self.DB_print(result)
 				conn.commit()
@@ -165,11 +160,10 @@ class dataBaseDriver ():
 							       cursorclass=pymysql.cursors.DictCursor)
 			
 			with conn.cursor() as cursor:
-				sql = "SELECT `id`,`name`, `MAC`, `username`, `password`,`group_number` FROM `users` WHERE `name`=%s"
+				sql = "SELECT `id`,`name`, `MAC`, `username`,`group_number` FROM `users` WHERE `name`=%s"
 				select_tuple = (name)
 				cursor.execute(sql, select_tuple)
 				result = cursor.fetchone()
-				result['password'] = self.decrypt_user_info(result['password'])
 
 		except Exception as db_error:
 			self.DB_print (db_error)

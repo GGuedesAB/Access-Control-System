@@ -2,6 +2,7 @@ import argparse
 import os
 import getpass
 import logging
+import re
 import subprocess
 import signal
 import sys
@@ -133,9 +134,41 @@ def make_c_files (args):
 	else:
 		logging.info('C files built up!')
 
+def setup_env ():
+	# Check if variable is not already set
+	dirname = re.match('(.*\/Access-Control-System)', os.getcwd())
+	dirname = dirname.group(1)
+	local_env = 'export PYTHONPATH=' + dirname
+	bashrc_env = 'echo \"export PYTHONPATH=' + dirname + '\" >> ~/.bashrc'
+	try:
+		subprocess.run(local_env, shell=True)
+	except subprocess.CalledProcessError as err:
+		logging.error('Could not setup environment.')
+		print_process_error(err)
+		exit(1)
+	try:
+		subprocess.run(bashrc_env, shell=True)
+	except subprocess.CalledProcessError as err:
+		logging.error('Could not setup environment.')
+		print_process_error(err)
+		exit(1)
+
+
 def install_data_base ():
 	logging.info('Setting up database as root, please enter your new password.\n')
-	password = getpass.getpass()
+
+	try:
+		password = getpass.getpass()
+	except KeyboardInterrupt:
+		interrupt_handler(sys.exc_info())
+
+	start_mysql = ['sudo', '/etc/init.d/mysql', 'start']
+	try:
+		subprocess.run(start_mysql)
+	except subprocess.CalledProcessError as err:
+		logging.error('Could not start MYSQL.')
+		print_process_error(err)
+		exit(1)
 
 	SQL_querry = 'DROP USER \'root\'@\'localhost\'; CREATE USER \'root\'@\'localhost\' IDENTIFIED BY \'' + password + '\'; ' + 'GRANT ALL PRIVILEGES ON *.* TO \'root\'@\'localhost\' WITH GRANT OPTION; ' + 'FLUSH PRIVILEGES;'
 	root_cmd = 'sudo su -c \"/bin/sh\"'
@@ -147,12 +180,11 @@ def install_data_base ():
 
 	SQL_querry = '../database_setup/setup.sql'
 	mysql_cmd = 'mysql -u root -p' + password + ' < ' + SQL_querry
-	
 	try:
-		subprocess.run(mysql_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+		setup = subprocess.run(mysql_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
 	except subprocess.CalledProcessError as err:
 		print_process_error(err)
-	logging.info(err.stdout)
+	logging.info(setup.stdout.decode('utf-8'))
 
 def main ():
 	args = arg_parser()
@@ -160,6 +192,7 @@ def main ():
 	setup_packages(args)
 	make_c_files(args)
 	install_data_base()
+	setup_env()
 	
 if __name__ == '__main__':
 	main()
