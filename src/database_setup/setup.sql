@@ -3,7 +3,7 @@ USE `accontrol`;
 
 CREATE TABLE `groups` (
   `number` int(10) NOT NULL,
-  `description` varchar(45) DEFAULT NULL,
+  `description` varchar(60) DEFAULT NULL,
   PRIMARY KEY (`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -12,13 +12,13 @@ CREATE TABLE `users` (
   `name` varchar(45) DEFAULT NULL,
   `MAC` varchar(45) DEFAULT NULL,
   `username` varchar(45) DEFAULT NULL,
-  `password` blob,
+  `password` blob DEFAULT NULL,
   `group_number` int(10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`),
+  UNIQUE KEY `MAC_UNIQUE` (`MAC`)
   FOREIGN KEY (`group_number`) REFERENCES `groups`(`number`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
-
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `facilities` (
   `name` varchar(45) NOT NULL,

@@ -40,7 +40,7 @@ class dataBaseDriver ():
 				decoded_user_info = decrypted_info.decode('utf-8')
 				return decoded_user_info
 			else:
-				self.DB_print ('Decryption algorithm recieved not byte argument.')
+				self.DB_print ('Decryption algorithm received not byte argument.')
 		except Exception as de:
 			self.DB_print ('DEC_ERROR: \n' + de)
 
@@ -96,7 +96,7 @@ class dataBaseDriver ():
 		finally:
 			conn.close()
 
-  	# facilities
+  	# insert facility
 	def insert_new_facility(self, acsfacility):
 		try:
 			conn = pymysql.connect(host=self.host,
@@ -173,7 +173,7 @@ class dataBaseDriver ():
 			conn.close()
 			return result
 
-		# Access info from MAC
+		# Check access to facilities from MAC
 	def check_access (self, MAC):
 		try:
 			conn = pymysql.connect(host=self.host,
@@ -197,3 +197,188 @@ class dataBaseDriver ():
 		finally:
 			conn.close()
 			return result
+	
+
+		# password must be already encrypted (bytes)
+	def add_user_info(self, acsuser):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s)"
+				update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password, acsuser.get_MAC())
+				result = cursor.execute(sql, update_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		#Admin may edit any attribute
+	def edit_user(self, acsuser):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "UPDATE `users` SET `id`=%d, `name`=%s, `MAC`=%s, `username`=%s,`password`=%s, group_number=%d where `MAC`=%s)"
+				update_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number())
+				result = cursor.execute(sql, update_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		#Admin can remove access from a group
+	def remove_access(self, acsaccess):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "DELETE FROM `access` WHERE `group_number`=%d, `facility_name`=%s"
+				delete_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
+				result = cursor.execute(sql, delete_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		finally:
+			conn.close()
+
+		#Admin can remove group
+	def remove_group(self, acsgroup):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "DELETE FROM `groups` WHERE `number`=%d"
+				delete_tuple = (acsgroup.get_number())
+				result = cursor.execute(sql, delete_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		finally:
+			conn.close()
+
+		#Admin can remove user
+	def remove_user(self, acsuser):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username=%s`"
+				delete_tuple = (acsuser.get_MAC(),acsuser.get_username)
+				result = cursor.execute(sql, delete_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		finally:
+			conn.close()
+		
+
+		#Admin can remove facility
+	def remove_group(self, acsfacility):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "DELETE FROM `facilities` WHERE `name`=%s"
+				delete_tuple = (acsfacility.get_name())
+				result = cursor.execute(sql, delete_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		finally:
+			conn.close()
+
+
+		# change group description
+	def change_group_description(self, acsgroup):
+		try:
+			conn = pymysql.connect(host=self.host,
+								   # Be careful not to confuse user from DB with 
+							   	   user=self.db_owner,
+							       password=self.password,
+							       db=self.db_name,
+							       charset='utf8mb4',
+							       binary_prefix=True,
+							       cursorclass=pymysql.cursors.DictCursor)
+		
+			with conn.cursor() as cursor:
+				sql = "UPDATE `groups` SET `description`=%s where `number`=%d)"
+				update_tuple = (acsgroup.get_description(),acsuser.get_number())
+				result = cursor.execute(sql, update_tuple)
+				self.DB_print(result)
+				conn.commit()
+
+		except Exception as db_error:
+			self.DB_print (db_error)
+			return None
+
+		finally:
+			conn.close()
+
+		
+
+	
+	
+		

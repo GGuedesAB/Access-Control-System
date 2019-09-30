@@ -4,7 +4,7 @@ import re
 class interpreter ():
     
     def __init__ (self):
-        self.COMMAND_LIST = ['define_new_group', 'insert_new_user', 'insert_new_facility', 'give_access', 'retrieve_info_from_name', 'check_access']
+        self.COMMAND_LIST = ['define_new_group', 'insert_new_user', 'insert_new_facility', 'give_access', 'retrieve_info_from_name', 'check_access', 'add_user_info', 'edit_user', 'remove_access', 'remove_facility', 'remove_group', 'remove_user', 'change_group_description', ]
         print ('Interpreter')
 
     def parse_command (self, command):
