@@ -1,34 +1,52 @@
 import ctypes
-import pymysql.cursors
+import pymysql
+import logging
 from src.database_setup import accessControlUser
+from src.tools import logger
+
+class mysqlConnector ():
+	def __init__ (self, data_base):
+		self.db_logger = logger.acsLogger()
+		self.db_logger.set_warning()
+		self.__connect(data_base)
+
+	def __connect(self, data_base):
+		try:
+			self.conn = pymysql.connect(host=data_base.host, #'localhost'
+								   user=data_base.db_owner, #'root'
+								   password=data_base.password,
+								   db=data_base.db_name, #'accontrol'
+								   charset='utf8mb4',
+								   binary_prefix=True,
+								   cursorclass=pymysql.cursors.DictCursor)
+		except pymysql.OperationalError:
+			self.db_logger.error('Could not connect to database ' + data_base.db_name + ' through user ' + data_base.db_owner + '@' + data_base.host)
+			exit(1)
+
+	# values must be a tuple in the same order as defined in query
+	def execute_query(self, query, values):
+		with self.conn.cursor() as cursor:
+			result = cursor.execute(query, values)
+			if type(result) is int:
+				self.conn.commit()
+				return result
+			else:
+				result_return = result.fetchall()
+				self.conn.commit()
+				return result_return
+	
+	def __del__ (self):
+		self.conn.close()
 
 class dataBaseDriver ():
 
-	# Checks if possible to connect to databse
+	# checks if possible to connect to databse
 	def __init__(self, host, db_owner, password, db_name):
-		self.debug_mode = False
 		self.host = host
 		self.db_owner = db_owner
 		self.password = password
 		self.db_name = db_name
-		try:
-			conn = pymysql.connect(host=self.host, #'localhost'
-								   user=self.db_owner, #'root'
-								   password=self.password, #'root'
-								   db=self.db_name, #'accontrol'
-								   charset='utf8mb4',
-							       binary_prefix=True,
-								   cursorclass=pymysql.cursors.DictCursor)
-
-		except pymysql.Error as error:
-			self.DB_print(error)
-
-		finally:
-			conn.close()
-
-	def DB_print (self, print_str):
-		if self.debug_mode:
-			print ('DB DEBUG: ' + str(print_str))
+		self.db_driver = mysqlConnector(self)
 
 	def decrypt_user_info (self, acsuser_info):
 		try:
@@ -39,346 +57,90 @@ class dataBaseDriver ():
 				decrypted_info = c_decrypt_.decrypt(acsuser_info)
 				decoded_user_info = decrypted_info.decode('utf-8')
 				return decoded_user_info
-			else:
-				self.DB_print ('Decryption algorithm received not byte argument.')
-		except Exception as de:
-			self.DB_print ('DEC_ERROR: \n' + de)
+
+		except OSError:
+			exit(1)
 
 	# groups must exist before inserting users
 	def define_new_group(self, acsgroup):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "INSERT INTO `groups` (`number`,`description`) VALUES (%d,%s)"
-				insert_tuple = (acsgroup.get_number(), acsgroup.get_description())
-				result = cursor.execute(sql, insert_tuple)
-				self.DB_print(result)
-				conn.commit()
-
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-
+		sql = "INSERT INTO `groups` (`number`,`description`) VALUES (%d,%s)"
+		insert_tuple = (acsgroup.get_number(), acsgroup.get_description())
+		self.db_driver.execute_query(sql, insert_tuple)
+	
 	# password must be already encrypted (bytes)
 	def insert_new_user(self, acsuser):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "INSERT INTO `users` (`id`,`name`, `MAC`, `username`, `password`,`group_number`) VALUES (%d,%s,%s,%s,%s,%d)"
-				insert_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number())
-				result = cursor.execute(sql, insert_tuple)
-				self.DB_print(result)
-				conn.commit()
-
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
+		sql = "INSERT INTO `users` (`name`, `MAC`, `username`, `password`) VALUES (%s,%s,%s,%s)"
+		insert_tuple = (acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password())
+		self.db_driver.execute_query(sql, insert_tuple)
 
   	# insert facility
 	def insert_new_facility(self, acsfacility):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "INSERT INTO `facilities` (`name`) VALUES (%s)"
-				insert_tuple = (acsfacility.get_name())
-				result = cursor.execute(sql, insert_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "INSERT INTO `facilities` (`name`) VALUES (%s)"
+		insert_tuple = (acsfacility.get_name())
+		self.db_driver.execute_query(sql, insert_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-
-		# link group and facility
+	# link group and facility
 	def give_access(self, acsaccess):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "INSERT INTO `access` (`group_number`,`facility_name`) VALUES (%d,%s)"
-				insert_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
-				result = cursor.execute(sql, insert_tuple)
-				self.DB_print(result)
-				conn.commit()
-
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
+		sql = "INSERT INTO `access` (`group_number`,`facility_name`) VALUES (%d,%s)"
+		insert_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
+		self.db_driver.execute_query(sql, insert_tuple)
 	
-		# User info
+	# user info
 	def retrieve_info_from_name (self, name):
-		try:
-			conn = pymysql.connect(host=self.host,
-							       user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-			
-			with conn.cursor() as cursor:
-				sql = "SELECT `id`,`name`, `MAC`, `username`,`group_number` FROM `users` WHERE `name`=%s"
-				select_tuple = (name)
-				cursor.execute(sql, select_tuple)
-				result = cursor.fetchone()
+		sql = "SELECT `id`,`name`, `MAC`, `username`,`group_number` FROM `users` WHERE `name`=%s"
+		select_tuple = (name)
+		return self.db_driver.execute_query(sql, select_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-			return result
-
-		# Check access to facilities from MAC
+	# check access to facilities from MAC
 	def check_access (self, MAC):
-		try:
-			conn = pymysql.connect(host=self.host,
-							       user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-			
-			with conn.cursor() as cursor:
-				sql = "SELECT `facility_name` FROM `users`,`access` WHERE `users`.`group_number` = `access`.`group_number` AND `MAC`=%s"
-				select_tuple = (MAC)
-				cursor.execute(sql, select_tuple)
-				result = cursor.fetchone()
+		sql = "SELECT `facility_name` FROM `users`,`access` WHERE `users`.`group_number` = `access`.`group_number` AND `MAC`=%s"
+		select_tuple = (MAC)
+		return self.db_driver.execute_query(sql, select_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-			return result
-	
-
-		# password must be already encrypted (bytes)
+	# password must be already encrypted (bytes)
 	def add_user_info(self, acsuser):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s)"
-				update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password, acsuser.get_MAC())
-				result = cursor.execute(sql, update_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s)"
+		update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password, acsuser.get_MAC())
+		self.db_driver.execute_query(sql, update_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		#Admin may edit any attribute
+	# admin may edit any attribute
 	def edit_user(self, acsuser):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "UPDATE `users` SET `id`=%d, `name`=%s, `MAC`=%s, `username`=%s,`password`=%s, group_number=%d where `MAC`=%s)"
-				update_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number())
-				result = cursor.execute(sql, update_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "UPDATE `users` SET `id`=%d, `name`=%s, `MAC`=%s, `username`=%s,`password`=%s, group_number=%d where `MAC`=%s)"
+		update_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number())
+		self.db_driver.execute_query(sql, update_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		#Admin can remove access from a group
+	# admin can remove access from a group
 	def remove_access(self, acsaccess):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "DELETE FROM `access` WHERE `group_number`=%d, `facility_name`=%s"
-				delete_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
-				result = cursor.execute(sql, delete_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "DELETE FROM `access` WHERE `group_number`=%d, `facility_name`=%s"
+		delete_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
+		self.db_driver.execute_query(sql, delete_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-
-		#Admin can remove group
+	# admin can remove group
 	def remove_group(self, acsgroup):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "DELETE FROM `groups` WHERE `number`=%d"
-				delete_tuple = (acsgroup.get_number())
-				result = cursor.execute(sql, delete_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "DELETE FROM `groups` WHERE `number`=%d"
+		delete_tuple = (acsgroup.get_number())
+		self.db_driver.execute_query(sql, delete_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-
-		#Admin can remove user
+	# admin can remove user
 	def remove_user(self, acsuser):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username=%s`"
-				delete_tuple = (acsuser.get_MAC(),acsuser.get_username)
-				result = cursor.execute(sql, delete_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username=%s`"
+		delete_tuple = (acsuser.get_MAC(),acsuser.get_username)
+		self.db_driver.execute_query(sql, delete_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
+	# admin can remove facility
+	def remove_facility(self, acsfacility):
+		sql = "DELETE FROM `facilities` WHERE `name`=%s"
+		delete_tuple = (acsfacility.get_name())
+		self.db_driver.execute_query(sql, delete_tuple)
 
-		finally:
-			conn.close()
-		
-
-		#Admin can remove facility
-	def remove_group(self, acsfacility):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "DELETE FROM `facilities` WHERE `name`=%s"
-				delete_tuple = (acsfacility.get_name())
-				result = cursor.execute(sql, delete_tuple)
-				self.DB_print(result)
-				conn.commit()
-
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-
-
-		# change group description
+	# change group description
 	def change_group_description(self, acsgroup):
-		try:
-			conn = pymysql.connect(host=self.host,
-								   # Be careful not to confuse user from DB with 
-							   	   user=self.db_owner,
-							       password=self.password,
-							       db=self.db_name,
-							       charset='utf8mb4',
-							       binary_prefix=True,
-							       cursorclass=pymysql.cursors.DictCursor)
-		
-			with conn.cursor() as cursor:
-				sql = "UPDATE `groups` SET `description`=%s where `number`=%d)"
-				update_tuple = (acsgroup.get_description(),acsuser.get_number())
-				result = cursor.execute(sql, update_tuple)
-				self.DB_print(result)
-				conn.commit()
+		sql = "UPDATE `groups` SET `description`=%s where `number`=%d)"
+		update_tuple = (acsgroup.get_description(),acsgroup.get_number())
+		self.db_driver.execute_query(sql, update_tuple)
 
-		except Exception as db_error:
-			self.DB_print (db_error)
-			return None
-
-		finally:
-			conn.close()
-
-		
-
-	
-	
-		
+if __name__ == "__main__":
+	my_db = dataBaseDriver('localhost', 'root', 'jotaquest', 'accontrol')
+	new_user = accessControlUser.acsuser('Gustavo', 'myMACisTHIS', 'gustavob', 'Gatuno4268!', 2)
+	my_db.insert_new_user(new_user)
+	my_db.retrieve_info_from_name('Gustavo')
