@@ -16,7 +16,7 @@ CREATE TABLE `users` (
   `group_number` int(10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`),
-  UNIQUE KEY `MAC_UNIQUE` (`MAC`)
+  UNIQUE KEY `MAC_UNIQUE` (`MAC`),
   FOREIGN KEY (`group_number`) REFERENCES `groups`(`number`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
