@@ -25,8 +25,7 @@ class acsgroup ():
 
 # Access control system user
 class acsuser ():
-	def __init__ (self, user_id, name, MAC, username, password, group_number, debug_mode=False):
-		self.printer = acs_print(debug_mode)
+	def __init__ (self, name, MAC, username, password, group_number=None, user_id=None):
 		self.id = user_id
 		self.name = name
 		self.MAC = MAC
@@ -35,7 +34,7 @@ class acsuser ():
 		self.group_number = group_number
 
 	def get_id (self):
-		return self.id
+		return int(self.id)
 
 	def get_name (self):
 		return self.name
@@ -47,10 +46,10 @@ class acsuser ():
 		return self.username
 
 	def get_group_number (self):
-		return self.group_number
+		return int(self.group_number)
 
 	def get_encrypted_password (self):
-		return self.encrypt_user_info
+		return self.encrypted_password
 
 	def encrypt_user_info (self, user_info):
 		try:
@@ -62,10 +61,9 @@ class acsuser ():
 				encrypted_info = c_encrypt_.encrypt(encoded_user_info)
 				return encrypted_info
 			else:
-				self.printer.ENC_print ('User information is not string.')
 				return None
-		except Exception as ee:
-			self.printer.ENC_print (ee)
+		except OSError:
+			exit(1)
 
 # Access control system facility
 class acsfacility ():
