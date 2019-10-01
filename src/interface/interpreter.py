@@ -5,7 +5,6 @@ class interpreter ():
     
     def __init__ (self):
         self.COMMAND_LIST = ['define_new_group', 'insert_new_user', 'insert_new_facility', 'give_access', 'retrieve_info_from_name', 'check_access', 'add_user_info', 'edit_user', 'remove_access', 'remove_facility', 'remove_group', 'remove_user', 'change_group_description', ]
-        print ('Interpreter')
 
     def parse_command (self, command):
         command_args = {}
@@ -33,8 +32,7 @@ class interpreter ():
         
     def execute (self, command):
         command, args = self.parse_command(command)
-        print (command)
-        print (args)
+        
 
 if __name__ == "__main__":
     command = input('-->')
