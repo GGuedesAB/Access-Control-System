@@ -1,6 +1,14 @@
 import ctypes
 import pymysql.cursors
 
+class acs_print():
+	def __init__ (self, debug_mode=False):
+		self.debug_mode = debug_mode
+	
+	def ENC_print (self, print_str):
+		if self.debug_mode:
+			print ('ENC DEBUG: ' + str(print_str))
+
 # Access control system group
 class acsgroup ():
 	def __init__ (self, number, description):
@@ -8,7 +16,7 @@ class acsgroup ():
 		self.description = description
 
 	def get_number (self):
-		return int(self.number)
+		return self.number
 
 	def get_description (self):
 		return self.description
@@ -72,7 +80,7 @@ class acsaccess ():
 		self.facility_name = facility_name
 
 	def get_group_number (self):
-		return int(self.group_number)
+		return self.group_number
 
 	def get_facility_name (self):
 		return self.facility_name
