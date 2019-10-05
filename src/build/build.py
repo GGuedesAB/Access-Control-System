@@ -8,6 +8,8 @@ import sys
 from time import gmtime, strftime
 from src.tools import logger
 
+# Add to build the creation of first user as admin
+
 def interrupt_handler (exception_info):
 	build_logger.debug('Interrupt signal recieved: ' + str(exception_info))
 	build_logger.warning('Stopping installation.')
@@ -213,6 +215,3 @@ def main ():
 	install_data_base()
 	setup_env()
 	install_python_dependencies()
-	
-if __name__ == '__main__':
-	main()
