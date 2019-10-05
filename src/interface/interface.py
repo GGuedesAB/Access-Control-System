@@ -1,44 +1,69 @@
 # This is an interface for admin
-import logging
+from src.tools import logger
 from src.interface import interpreter
 
-class console_factory ():
-    def __init__ (self):
-        self.number_of_instances = 0
-        self.instance_dict = {}
+class console_manager:
 
+    class __console_manager:
+        def __init__ (self):
+            pass
+        def __str__ (self):
+            return repr(self)
+
+    instance = None
+
+    def __init__ (self):
+        self.logger = logger.acsLogger()
+        self.logger.set_warning()
+
+        if not console_manager.instance:
+            console_manager.instance = console_manager.__console_manager()
+            self.number_of_instances = 1
+            self.instance_dict = {}
+
+        else:
+            self.logger.error ('Only one instance of console manager can be created.')
+            exit(1)
+        
     def get_console (self):
-        self.console = console(self.id)
         self.id = self.number_of_instances
+        self.console = console(self.id, True)
         self.number_of_instances += 1
         self.instance_dict.update({self.id : self.console})
         return self.console
 
+    def list_consoles (self):
+        return self.instance_dict
 
-class console ():
-    def __init__ (self, console_id):
+    def deactivate_console (self, console):
+        console.is_active = False
+
+    def destroy_console (self, console):
+        self.deactivate_console(console)
+        to_be_killed_console_id = console.get_id()
+        del self.instance_dict[to_be_killed_console_id]
+        self.logger.warning ('Killing console ' + str(to_be_killed_console_id))
+
+class console:
+    def __init__ (self, console_id, is_active):
+        self.is_active = is_active
         self.id = console_id
-        self.create_logger ()
+        self.interpreter = interpreter.interpreter()
+        self.logger = logger.acsLogger()
+        self.logger.set_warning()
 
-    def create_logger (self):
-	    log_format = "%(asctime)s - %(levelname)s: %(message)s"
-	    date_format = '%d-%m-%Y %H:%M:%S'
-	    logging.basicConfig(level=logging.INFO, format=log_format, datefmt=date_format)
-	    
+    def get_id (self):
+        return self.id
+
     def run (self):
-        try:
-            while (True):
-                command = input ('-->')
-                interpreter.execute(command)
-        except KeyboardInterrupt:
-            logging.info('Console exit.')
-            return 2
-
-
-
-def main ():
-    my_console = console_factory.get_console()
-    my_console.run()
-
-if __name__ == "__main__":
-    main()
+        if self.is_active:
+            try:
+                while (True):
+                    command = input ('-->')
+                    interpreter.interpreter().execute(command)
+            except KeyboardInterrupt:
+                print ('\n')
+                self.logger.warning('Console exit.')
+                return 2
+        else:
+            self.logger.error('Cannot reach console.')
