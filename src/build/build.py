@@ -125,15 +125,6 @@ def _call_std_subprocess (command):
 def print_process_error (process):
         build_logger.error(process.stderr.decode('utf-8'))
 
-def install_python_dependencies():
-    pip_call = ['sudo', '-H', 'pip3', 'install', 'pymysql']
-    try:
-        subprocess.run(pip_call, check=True)
-    except subprocess.CalledProcessError as err:
-        build_logger.error('Could not install python dependencies.')
-        print_process_error(err)
-        exit(1)
-
 def setup_packages ():
     if not _is_architecture_supported():
         build_logger.error('Your system system architecture is not supported.')
@@ -206,7 +197,6 @@ def main ():
     setup_packages()
     make_c_files()
     install_data_base()
-    install_python_dependencies()
 
 if __name__ == "__main__":
     main()

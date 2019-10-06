@@ -39,6 +39,15 @@ def setup_env ():
                 print ('ERROR: ' + err.stderr.decode('utf-8'))
                 exit(1)
 
+def install_python_dependencies():
+    pip_call = ['sudo', '-H', 'pip3', 'install', 'pymysql']
+    try:
+        subprocess.run(pip_call, check=True)
+    except subprocess.CalledProcessError:
+        print('ERROR: Could not install python dependencies.')
+        exit(1)                
+
 if __name__ == "__main__":
     setup_env()
+    install_python_dependencies()
     print ('\nEnvironment variables are set!\n')
