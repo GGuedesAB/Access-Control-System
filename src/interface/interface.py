@@ -1,4 +1,5 @@
 # This is an interface for admin
+import getpass
 from src.tools import logger
 from src.interface import interpreter
 
@@ -46,9 +47,16 @@ class console_manager:
 
 class console:
     def __init__ (self, console_id, is_active):
+        try:
+            print ('Please identify yourself.')
+            username = input('Username: ')
+            password = getpass.getpass()
+        except KeyboardInterrupt:
+            print ('\n')
+            exit (2)
         self.is_active = is_active
         self.id = console_id
-        self.interpreter = interpreter.interpreter()
+        self.interpreter = interpreter.interpreter(username, password)
         self.logger = logger.acsLogger()
         self.logger.set_warning()
 
@@ -60,10 +68,18 @@ class console:
             try:
                 while (True):
                     command = input ('-->')
-                    interpreter.interpreter().execute(command)
+                    self.interpreter.execute(command)
             except KeyboardInterrupt:
                 print ('\n')
                 self.logger.warning('Console exit.')
                 return 2
         else:
             self.logger.error('Cannot reach console.')
+
+def main():
+    console_fac = console_manager()
+    console_1 = console_fac.get_console()
+    console_1.run()
+
+if __name__ == "__main__":
+    main()

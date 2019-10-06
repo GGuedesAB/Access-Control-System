@@ -40,10 +40,10 @@ def setup_env ():
                 exit(1)
 
 def install_python_dependencies():
-    apt_call = ['sudo', 'apt-get', '-qq', 'install', 'python3-pip']
+    apt_call = ['sudo', 'apt-get', '-qq', 'install', 'python3-pip', '-y']
     pip_call = ['sudo', '-H', 'pip3', 'install', 'pymysql']
     try:
-        subprocess.run(apt_call, check=True)
+        subprocess.run(apt_call, check=True, stdout=subprocess.PIPE)
         subprocess.run(pip_call, check=True)
     except subprocess.CalledProcessError:
         print('ERROR: Could not install python dependencies.')

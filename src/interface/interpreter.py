@@ -4,7 +4,8 @@ import re
 
 class interpreter:
     
-    def __init__ (self):
+    def __init__ (self, username, password):
+        self.command_executer = executer.executer(username, password)
         self.COMMAND_DICT = {
             'define_new_group':             ('acsgroup',['number', 'description']), 
             'insert_new_user':              ('acsuser', ['name', 'MAC', 'username', 'password']),
@@ -53,10 +54,9 @@ class interpreter:
         return command_str, command_args
         
     def execute (self, command):
-        command_executer = executer.executer()
         try:
             command, args = self.parse_command(command)
         except re.error as err:
             print(err.msg)
         else:
-            command_executer.execute(command, args, self.get_command_table())
+            self.command_executer.execute(command, args, self.get_command_table())

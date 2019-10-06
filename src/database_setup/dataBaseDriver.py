@@ -3,6 +3,7 @@ import pymysql
 import logging
 import uuid
 import re
+import os
 from src.database_setup import accessControlUser
 from src.tools import logger
 
@@ -59,7 +60,10 @@ class dataBaseDriver:
 
     def decrypt_user_info (self, acsuser_info):
         try:
-            c_decrypt_ = ctypes.cdll.LoadLibrary(r"../encryption/decrypt.so")
+            dirname = re.match('(.*\/Access-Control-System)', os.getcwd())
+            dirname = dirname.group(1)
+            dirname = os.path.join(dirname, 'src/encryption/decrypt.so')
+            c_decrypt_ = ctypes.cdll.LoadLibrary(dirname)
             c_decrypt_.decrypt.argtype = ctypes.c_char_p
             c_decrypt_.decrypt.restype = ctypes.c_char_p
             if type(acsuser_info) is bytes:

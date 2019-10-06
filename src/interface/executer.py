@@ -1,8 +1,9 @@
 from src.database_setup import dataBaseDriver
 from src.database_setup import accessControlUser
+
 class executer:
-    def __init__ (self):
-        self.db_driver = dataBaseDriver.dataBaseDriver('localhost', 'root', 'jotaquest', 'accontrol')
+    def __init__ (self, username, password):
+        self.db_driver = dataBaseDriver.dataBaseDriver('localhost', username, password, 'accontrol')
 
     def execute(self, command, args, command_table):
 
