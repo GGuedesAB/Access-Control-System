@@ -119,14 +119,14 @@ class dataBaseDriver:
 
     # password must be already encrypted (bytes)
     def add_user_info(self, acsuser):
-        sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s)"
-        update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password, acsuser.get_MAC())
+        sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s"
+        update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_MAC())
         self.db_driver.execute_query(sql, update_tuple)
 
     # admin may edit any attribute
     def edit_user(self, acsuser):
-        sql = "UPDATE `users` SET `id`=%d, `name`=%s, `MAC`=%s, `username`=%s,`password`=%s, group_number=%s where `MAC`=%s)"
-        update_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_MAC(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number())
+        sql = "UPDATE `users` SET `id`=%s, `name`=%s, `username`=%s,`password`=%s, group_number=%s where `MAC`=%s"
+        update_tuple = (acsuser.get_id(),acsuser.get_name(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number(), acsuser.get_MAC())
         self.db_driver.execute_query(sql, update_tuple)
 
     # admin can remove access from a group
@@ -143,7 +143,7 @@ class dataBaseDriver:
 
     # admin can remove user
     def remove_user(self, acsuser):
-        sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username=%s`"
+        sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username`=%s"
         delete_tuple = (acsuser.get_MAC(),acsuser.get_username())
         self.db_driver.execute_query(sql, delete_tuple)
 
@@ -155,6 +155,6 @@ class dataBaseDriver:
 
     # change group description
     def change_group_description(self, acsgroup):
-        sql = "UPDATE `groups` SET `description`=%s where `number`=%s)"
+        sql = "UPDATE `groups` SET `description`=%s where `number`=%s"
         update_tuple = (acsgroup.get_description(),acsgroup.get_number())
         self.db_driver.execute_query(sql, update_tuple)
