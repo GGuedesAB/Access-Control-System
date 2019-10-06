@@ -14,6 +14,7 @@ class mysqlConnector:
         self.__connect(data_base)
 
     def __connect(self, data_base):
+        self.conn = None
         try:
             self.conn = pymysql.connect(host=data_base.host, #'localhost'
                                    user=data_base.db_owner, #'root'
@@ -28,6 +29,9 @@ class mysqlConnector:
 
     # values must be a tuple in the same order as defined in query
     def execute_query(self, query, values):
+        if self.conn is None:
+            self.db_logger.error('Could not open connection to database.')
+            exit (1)
         with self.conn.cursor() as cursor:
             try:
                 cursor.execute(query, values)
@@ -46,7 +50,8 @@ class mysqlConnector:
                 return query_result
                 
     def __del__ (self):
-        self.conn.close()
+        if self.conn is not None:
+            self.conn.close()
 
 class dataBaseDriver:
 
