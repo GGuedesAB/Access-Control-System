@@ -14,7 +14,7 @@ class interpreter:
             'retrieve_info_from_username':  ('str', ['username']),
             'check_access':                 ('str', ['MAC']),
             'add_user_info':                ('acsuser', ['name', 'username', 'password', 'MAC']),
-            'edit_user':                    ('acsuser', ['id', 'name', 'username', 'password', 'group_number', 'MAC']),
+            'edit_user':                    ('acsuser', ['name', 'username', 'password', 'group_number', 'MAC']),
             'remove_access':                ('acsaccess', ['group_number', 'facility_name']),
             'remove_group':                 ('acsgroup', ['number']),
             'remove_user':                  ('acsuser', ['MAC', 'username']),
