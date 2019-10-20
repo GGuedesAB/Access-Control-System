@@ -24,6 +24,7 @@ class acsuser ():
         self.name = name
         self.MAC = MAC
         self.username = username
+        self.unencrypted_password = password
         self.encrypted_password = self.encrypt_user_info(password)
         self.group_number = group_number
 
@@ -44,6 +45,9 @@ class acsuser ():
 
     def get_encrypted_password (self):
         return self.encrypted_password
+
+    def get_unencrypted_password (self):
+        return self.unencrypted_password
 
     def encrypt_user_info (self, user_info):
         try:
