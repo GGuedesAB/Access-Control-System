@@ -143,6 +143,12 @@ def make_c_files ():
     else:
         build_logger.info('C files built up!')
 
+def check_folder ():
+    dirname = re.match('(.*\/Access-Control-System\/src\/build)', os.getcwd())
+    if dirname is None:
+        build_logger.error('Build must be done from src/build.')
+        exit(1)
+
 def install_data_base ():
     print('Setting up database for root.')
     try:
@@ -194,6 +200,7 @@ args = arg_parser()
 build_logger = create_logger()
 
 def main ():
+    check_folder()
     setup_packages()
     make_c_files()
     install_data_base()
