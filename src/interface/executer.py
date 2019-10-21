@@ -8,8 +8,10 @@ class executer:
         self.db_driver = dataBaseDriver.dataBaseDriver('localhost', username, password, 'accontrol')
 
     def pretty_print (self, d, indent=2):
-        for key in d:
-            print (d + ': ' + d[key])
+        for element in d:
+            for item, value in element.items():
+                print (str(item) + ':' + str(value))
+            print ('\n')
 
     def execute(self, command, args, command_table):
 
@@ -40,6 +42,6 @@ class executer:
             print ('EXECUTER Type Error: ' + str(terr.args))
             return 1
         if result is not None :
-            self.pretty_print(result[0])
+            self.pretty_print(result)
         
         
