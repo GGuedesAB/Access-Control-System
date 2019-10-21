@@ -144,11 +144,11 @@ class dataBaseDriver:
         unencrypted_password = acsuser.get_unencrypted_password()
         sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s"
         update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_MAC())
-        if username is not None:
+        if username is not None and username != 'root':
             try:
-                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\''
-                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\''
-                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\''
+                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\';'
+                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\';'
+                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\';'
                 self.db_driver.execute_query(drop_query)
                 self.db_driver.execute_query(create_query)
                 self.db_driver.execute_query(privileges_query)
@@ -162,11 +162,11 @@ class dataBaseDriver:
         unencrypted_password = acsuser.get_unencrypted_password()
         sql = "UPDATE `users` SET `name`=%s, `username`=%s,`password`=%s, group_number=%s where `MAC`=%s"
         update_tuple = (acsuser.get_name(), username, acsuser.get_encrypted_password(), acsuser.get_group_number(), acsuser.get_MAC())
-        if username is not None:
+        if username is not None and username != 'root':
             try:
-                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\''
-                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\''
-                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\''
+                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\';'
+                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\';'
+                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\';'
                 self.db_driver.execute_query(drop_query)
                 self.db_driver.execute_query(create_query)
                 self.db_driver.execute_query(privileges_query)
@@ -193,9 +193,9 @@ class dataBaseDriver:
 
         sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username`=%s"
         delete_tuple = (MAC, username)
-        if username is not None:
+        if username is not None and username != 'root':
             try:
-                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\''
+                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\';'
                 self.db_driver.execute_query(drop_query)
             except pymysql.err.MySQLError:
                 return None
