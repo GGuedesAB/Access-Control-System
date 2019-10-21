@@ -1,3 +1,3 @@
 fonsequinha
 15111914
-check_access(MAC=6)
+check_access()
