@@ -69,6 +69,7 @@ class console:
             try:
                 while (True):
                     command = input ('-->')
+                    print (command)
                     self.interpreter.execute(command)
             except KeyboardInterrupt:
                 print ('\n')
