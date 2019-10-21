@@ -29,7 +29,10 @@ class acsuser ():
         self.group_number = group_number
 
     def get_id (self):
-        return int(self.id)
+        if self.id is not None:
+            return int(self.id)
+        else:
+            return None
 
     def get_name (self):
         return self.name
@@ -41,7 +44,10 @@ class acsuser ():
         return self.username
 
     def get_group_number (self):
-        return int(self.group_number)
+        if self.group_number is not None:
+            return int(self.group_number)
+        else:
+            return None
 
     def get_encrypted_password (self):
         return self.encrypted_password
@@ -81,7 +87,10 @@ class acsaccess ():
         self.facility_name = facility_name
 
     def get_group_number (self):
-        return int(self.group_number)
+        if self.group_number is not None:
+            return int(self.group_number)
+        else:
+            return None
 
     def get_facility_name (self):
         return self.facility_name

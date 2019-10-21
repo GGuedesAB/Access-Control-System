@@ -50,7 +50,8 @@ class console:
         try:
             print ('Please identify yourself.')
             username = input('Username: ')
-            password = getpass.getpass()
+            # password = getpass.getpass()
+            password = input('Password: ')
         except KeyboardInterrupt:
             print ('\n')
             exit (2)
@@ -73,6 +74,9 @@ class console:
                 print ('\n')
                 self.logger.warning('Console exit.')
                 return 2
+            except EOFError:
+                self.logger.info ('Finished reading script.')
+                return 0
         else:
             self.logger.error('Cannot reach console.')
 

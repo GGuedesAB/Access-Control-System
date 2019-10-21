@@ -40,16 +40,12 @@ class mysqlConnector:
                     cursor.execute(query, values)
             except pymysql.err.InternalError as internal_err:
                 self.db_logger.error (internal_err.args)
-                return None
             except TypeError as tperr:
                 self.db_logger.error (tperr.args)
-                return None
             except pymysql.err.IntegrityError as integrity_err:
                 self.db_logger.error (integrity_err.args)
-                return None
             except pymysql.err.OperationalError:
                 self.db_logger.error ('You have no permission to make changes on accontrol.')
-                return None
             else:
                 query_result = cursor.fetchall()
                 self.conn.commit()
@@ -98,14 +94,16 @@ class dataBaseDriver:
         username = acsuser.get_username()
         unencrypted_password = acsuser.get_unencrypted_password()
         encrypted_password = acsuser.get_encrypted_password()
-
-        create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\''
-        privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\''
-
         sql = "INSERT INTO `users` (`name`, `MAC`, `username`, `password`) VALUES (%s,%s,%s,%s)"
         insert_tuple = (name, MAC, username, encrypted_password)
-        self.db_driver.execute_query(create_query)
-        self.db_driver.execute_query(privileges_query)
+        if username is not None and username != 'root':
+            try:
+                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\''
+                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\''
+                self.db_driver.execute_query(create_query)
+                self.db_driver.execute_query(privileges_query)
+            except pymysql.err.MySQLError:
+                return None
         self.db_driver.execute_query(sql, insert_tuple)
 
       # insert facility
@@ -127,6 +125,12 @@ class dataBaseDriver:
         result = self.db_driver.execute_query(sql, select_tuple)
         return result
 
+    def retrieve_description_from_group (self, number):
+        sql = "SELECT `description` FROM `groups` WHERE `number`=%s"
+        select_tuple = (number)
+        result = self.db_driver.execute_query(sql, select_tuple)
+        return result
+
     # check access to facilities from MAC
     def check_access (self, MAC):
         sql = "SELECT `facility_name` FROM `users`,`access` WHERE `users`.`group_number` = `access`.`group_number` AND `MAC`=%s"
@@ -136,19 +140,43 @@ class dataBaseDriver:
 
     # password must be already encrypted (bytes)
     def add_user_info(self, acsuser):
+        username = acsuser.get_username()
+        unencrypted_password = acsuser.get_unencrypted_password()
         sql = "UPDATE `users` SET `name`=%s, `username`=%s, `password`=%s where `MAC`=%s"
         update_tuple = (acsuser.get_name(),acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_MAC())
+        if username is not None:
+            try:
+                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\''
+                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\''
+                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\''
+                self.db_driver.execute_query(drop_query)
+                self.db_driver.execute_query(create_query)
+                self.db_driver.execute_query(privileges_query)
+            except pymysql.err.MySQLError:
+                return None
         self.db_driver.execute_query(sql, update_tuple)
 
     # admin may edit any attribute
     def edit_user(self, acsuser):
+        username = acsuser.get_username()
+        unencrypted_password = acsuser.get_unencrypted_password()
         sql = "UPDATE `users` SET `name`=%s, `username`=%s,`password`=%s, group_number=%s where `MAC`=%s"
-        update_tuple = (acsuser.get_name(), acsuser.get_username(), acsuser.get_encrypted_password(), acsuser.get_group_number(), acsuser.get_MAC())
+        update_tuple = (acsuser.get_name(), username, acsuser.get_encrypted_password(), acsuser.get_group_number(), acsuser.get_MAC())
+        if username is not None:
+            try:
+                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\''
+                create_query = 'CREATE USER \'' + username + '\'@\'localhost\' IDENTIFIED BY \'' + unencrypted_password + '\''
+                privileges_query =  'GRANT SELECT ON accontrol.* TO \'' + username + '\'@\'localhost\''
+                self.db_driver.execute_query(drop_query)
+                self.db_driver.execute_query(create_query)
+                self.db_driver.execute_query(privileges_query)
+            except pymysql.err.MySQLError:
+                return None
         self.db_driver.execute_query(sql, update_tuple)
 
     # admin can remove access from a group
     def remove_access(self, acsaccess):
-        sql = "DELETE FROM `access` WHERE `group_number`=%s, `facility_name`=%s"
+        sql = "DELETE FROM `access` WHERE `group_number`=%s AND `facility_name`=%s"
         delete_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
         self.db_driver.execute_query(sql, delete_tuple)
 
@@ -160,8 +188,17 @@ class dataBaseDriver:
 
     # admin can remove user
     def remove_user(self, acsuser):
+        username = acsuser.get_username()
+        MAC = acsuser.get_MAC()
+
         sql = "DELETE FROM `users` WHERE `MAC`=%s OR `username`=%s"
-        delete_tuple = (acsuser.get_MAC(),acsuser.get_username())
+        delete_tuple = (MAC, username)
+        if username is not None:
+            try:
+                drop_query = 'DROP USER \'' + username+ '\'@\'localhost\''
+                self.db_driver.execute_query(drop_query)
+            except pymysql.err.MySQLError:
+                return None
         self.db_driver.execute_query(sql, delete_tuple)
 
     # admin can remove facility

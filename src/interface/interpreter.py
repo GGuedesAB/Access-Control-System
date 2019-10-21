@@ -7,19 +7,20 @@ class interpreter:
     def __init__ (self, username, password):
         self.command_executer = executer.executer(username, password)
         self.COMMAND_DICT = {
-            'define_new_group':             ('acsgroup',['number', 'description']), 
-            'insert_new_user':              ('acsuser', ['name', 'MAC', 'username', 'password']),
-            'insert_new_facility':          ('acsfacility', ['name']),
-            'give_access':                  ('acsaccess', ['group_number', 'facility_name']),
-            'retrieve_info_from_username':  ('str', ['username']),
-            'check_access':                 ('str', ['MAC']),
-            'add_user_info':                ('acsuser', ['name', 'username', 'password', 'MAC']),
-            'edit_user':                    ('acsuser', ['name', 'username', 'password', 'group_number', 'MAC']),
-            'remove_access':                ('acsaccess', ['group_number', 'facility_name']),
-            'remove_group':                 ('acsgroup', ['number']),
-            'remove_user':                  ('acsuser', ['MAC', 'username']),
-            'remove_facility':              ('acsfacility', ['name']),
-            'change_group_description':     ('acsgroup', ['description', 'number'])
+            'define_new_group':                 ('acsgroup',['number', 'description']), 
+            'insert_new_user':                  ('acsuser', ['name', 'MAC', 'username', 'password']),
+            'insert_new_facility':              ('acsfacility', ['name']),
+            'give_access':                      ('acsaccess', ['group_number', 'facility_name']),
+            'retrieve_info_from_username':      ('str', ['username']),
+            'retrieve_description_from_group':  ('acsgroup', ['number']),
+            'check_access':                     ('str', ['MAC']),
+            'add_user_info':                    ('acsuser', ['name', 'username', 'password', 'MAC']),
+            'edit_user':                        ('acsuser', ['name', 'username', 'password', 'group_number', 'MAC']),
+            'remove_access':                    ('acsaccess', ['group_number', 'facility_name']),
+            'remove_group':                     ('acsgroup', ['number']),
+            'remove_user':                      ('acsuser', ['MAC', 'username']),
+            'remove_facility':                  ('acsfacility', ['name']),
+            'change_group_description':         ('acsgroup', ['description', 'number'])
         }
 
     def get_command_table (self):
@@ -36,15 +37,23 @@ class interpreter:
             return command_str, None
         command_str = command_str.rstrip()
         if command_str in self.COMMAND_DICT:
-            args_parse = re.match('\(([^,]+)=([^,]+),* *(.*)\)$', args)
+            args_parse = re.match('\(([^,]+)=([^,]*),* *(.*)\)$', args)
             last_checked_regexp = ' '
             while args_parse:
-                command_args.update({args_parse.group(1):args_parse.group(2)})
+                if args_parse.group(2) == '':
+                    value = None
+                else:
+                    value = args_parse.group(2)
+                command_args.update({args_parse.group(1):value})
                 last_checked_regexp = args_parse.group(3)
-                args_parse = re.match('([^,]+)=([^,]+), *(.*)$', args_parse.group(3))
-            last_arg = re.match('([^,]+)=([^,]+) *$', last_checked_regexp)
+                args_parse = re.match('([^,]+)=([^,]*), *(.*)$', args_parse.group(3))
+            last_arg = re.match('([^,]+)=([^,]*) *$', last_checked_regexp)
             if last_arg:
-                command_args.update({last_arg.group(1):last_arg.group(2)})
+                if last_arg.group(2) == '':
+                    value = None
+                else:
+                    value = last_arg.group(2)
+                command_args.update({last_arg.group(1):value})
         else:
             raise re.error ('PARSER: Command does not exist.')
         std_cmd_arg_type, std_cmd_args = self.COMMAND_DICT[command_str]
