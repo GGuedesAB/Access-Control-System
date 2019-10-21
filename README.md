@@ -11,7 +11,7 @@ https://docs.google.com/spreadsheets/d/1UihpmunBnBeLRJsAMpuaPuoDvKpMd1tuBW4egLVN
 	T3 Implementar um setup básico dos pacotes do sistema [Gustavo][3hr]	
 	T4 Implementar o setup do MySQL para o sistema [Gustavo][4hr]
 	T5 Validar a integração entre as tarefas 2, 3 e 4 [Gustavo] [3hr]
-	T6 Desenvolver interface gráfica para visualização usando GTK [Gustavo][15hr]
+	T6 Implementar interface de execução terminal e gerar testes [Gustavo][15hr]
 
 ##### E2 Como usuário, quero meus dados em segurança
 	T7 Implementar algoritmo de encrypt/decrypt em C/C++ [Leone][5hr]
