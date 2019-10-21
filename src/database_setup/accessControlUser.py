@@ -10,7 +10,10 @@ class acsgroup ():
         self.description = description
 
     def get_number (self):
-        return int(self.number)
+        if self.number is not None:
+            return int(self.number)
+        else:
+            return None
 
     def get_description (self):
         return self.description
