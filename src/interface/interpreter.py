@@ -12,7 +12,7 @@ class interpreter:
             'insert_new_facility':              ('acsfacility', ['name']),
             'give_access':                      ('acsaccess', ['group_number', 'facility_name']),
             'retrieve_info_from_username':      ('str', ['username']),
-            'retrieve_description_from_group':  ('acsgroup', ['number']),
+            'retrieve_description_from_group':  ('str', ['number']),
             'check_access':                     ('str', ['MAC']),
             'add_user_info':                    ('acsuser', ['name', 'username', 'password', 'MAC']),
             'edit_user':                        ('acsuser', ['name', 'username', 'password', 'group_number', 'MAC']),
