@@ -13,7 +13,7 @@ class executer:
                 print (str(item) + ':' + str(value))
             print ('\n')
 
-    def execute(self, command, args, command_table):
+    def execute(self, current_user, command, args, command_table):
 
         try:
             command_arg_type, command_query_order = command_table.get(command)
@@ -21,7 +21,9 @@ class executer:
             print ('EXECUTER: Command has execution errors.')
             return 1
 
-        if command_arg_type == 'acsgroup':
+        if command_arg_type == 'self':
+            db_command_args = current_user.get_MAC()
+        elif command_arg_type == 'acsgroup':
             db_command_args = accessControlUser.acsgroup(args.get('number'), args.get('description'))
         elif command_arg_type == 'acsuser':
             db_command_args = accessControlUser.acsuser(args.get('name'), args.get('MAC'), args.get('username'), args.get('password'), args.get('group_number'))

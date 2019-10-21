@@ -13,7 +13,7 @@ class interpreter:
             'give_access':                      ('acsaccess', ['group_number', 'facility_name']),
             'retrieve_info_from_username':      ('str', ['username']),
             'retrieve_description_from_group':  ('str', ['number']),
-            'check_access':                     ('str', ['MAC']),
+            'check_access':                     ('self', ['MAC']),
             'add_user_info':                    ('acsuser', ['name', 'username', 'password', 'MAC']),
             'edit_user':                        ('acsuser', ['name', 'username', 'password', 'group_number', 'MAC']),
             'remove_access':                    ('acsaccess', ['group_number', 'facility_name']),
@@ -62,10 +62,10 @@ class interpreter:
             raise re.error ('PARSER: Wrong arguments in command.')
         return command_str, command_args
         
-    def execute (self, command):
+    def execute (self, command, current_user):
         try:
             command, args = self.parse_command(command)
         except re.error as err:
             print(err.msg)
         else:
-            self.command_executer.execute(command, args, self.get_command_table())
+            self.command_executer.execute(current_user, command, args, self.get_command_table())

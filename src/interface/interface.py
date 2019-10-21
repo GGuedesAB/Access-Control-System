@@ -1,6 +1,8 @@
 # This is an interface for admin
 import getpass
 from src.tools import logger
+from src.database_setup import accessControlUser
+from src.database_setup import dataBaseDriver
 from src.interface import interpreter
 
 class console_manager:
@@ -55,11 +57,22 @@ class console:
         except KeyboardInterrupt:
             print ('\n')
             exit (2)
-        self.is_active = is_active
-        self.id = console_id
-        self.interpreter = interpreter.interpreter(username, password)
-        self.logger = logger.acsLogger()
-        self.logger.set_warning()
+        db_driver = dataBaseDriver.dataBaseDriver('localhost', username, password, 'accontrol')
+        try:
+            info = db_driver.retrieve_info_from_username(username)[0]
+        except IndexError as iderr:
+            print ('ERROR: ' + iderr.args)
+            exit(1)
+        except UnboundLocalError as uberr:
+            print ('ERROR: ' + uberr.args)
+            exit(1)
+        else:
+            self.current_user = accessControlUser.acsuser(info.get('name'), info.get('MAC'), username, password)
+            self.is_active = is_active
+            self.id = console_id
+            self.interpreter = interpreter.interpreter(username, password)
+            self.logger = logger.acsLogger()
+            self.logger.set_warning()
 
     def get_id (self):
         return self.id
@@ -70,7 +83,7 @@ class console:
                 while (True):
                     command = input ('-->')
                     print (command)
-                    self.interpreter.execute(command)
+                    self.interpreter.execute(command, self.current_user)
             except KeyboardInterrupt:
                 print ('\n')
                 self.logger.warning('Console exit.')
