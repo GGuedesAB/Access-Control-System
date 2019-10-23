@@ -70,7 +70,8 @@ class console:
             self.current_user = accessControlUser.acsuser(info.get('name'), info.get('MAC'), username, password)
             self.is_active = is_active
             self.id = console_id
-            self.interpreter = interpreter.interpreter(username, password)
+            self.interpreter = interpreter.interpreter()
+            self.interpreter.login(username, password)
             self.logger = logger.acsLogger()
             self.logger.set_warning()
 
@@ -83,7 +84,7 @@ class console:
                 while (True):
                     command = input ('-->')
                     print (command)
-                    self.interpreter.execute(command, self.current_user)
+                    self.interpreter.execute(command)
             except KeyboardInterrupt:
                 print ('\n')
                 self.logger.warning('Console exit.')
