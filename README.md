@@ -33,4 +33,4 @@ https://docs.google.com/spreadsheets/d/1UihpmunBnBeLRJsAMpuaPuoDvKpMd1tuBW4egLVN
 	
 ##### E5 Como usuário, quero ser identificado pelo celular
 	T18 Incluir endereço MAC como atributo de usuário [Victor][1hr]
-	T19 Integrar interface de comunicação do Raspberry Pi no sistema [Gustavo][15hr]
+	T19 Implementar interface gráfica [Gustavo][15hr]
