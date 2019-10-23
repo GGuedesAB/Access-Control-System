@@ -30,7 +30,10 @@ class GUI ():
         self.scrollbar = tk.Scrollbar(self.command_frame)
         self.scrollbar.place(relx=0.5, rely=0.1, relwidth=0.5, relheight=0.5, anchor='n')
         response_list = tk.Listbox(self.command_frame, yscrollcommand=self.scrollbar.set)
-        list_of_user = command_response.split('\n\n')
+        try:
+            list_of_user = command_response.split('\n\n')
+        except AttributeError:
+            list_of_user = ['You do not have access to this command.']
         for element in list_of_user:
             response_list.insert(tk.END, element)
         response_list.place(relx=0.5, rely=0.1, relwidth=0.8, relheight=0.5, anchor='n')
