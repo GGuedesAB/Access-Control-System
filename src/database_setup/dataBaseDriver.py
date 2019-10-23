@@ -46,6 +46,8 @@ class mysqlConnector:
                 self.db_logger.error (integrity_err.args)
             except pymysql.err.OperationalError:
                 self.db_logger.error ('You have no permission to make changes on accontrol.')
+            except:
+                self.db_logger.error ('FATAL DATABASE ERROR.')
             else:
                 query_result = cursor.fetchall()
                 self.conn.commit()
@@ -85,7 +87,7 @@ class dataBaseDriver:
     def define_new_group(self, acsgroup):
         sql = "INSERT INTO `groups` (`number`,`description`) VALUES (%s,%s)"
         insert_tuple = (acsgroup.get_number(), acsgroup.get_description())
-        self.db_driver.execute_query(sql, insert_tuple)
+        return self.db_driver.execute_query(sql, insert_tuple)
     
     # password must be already encrypted (bytes)
     def insert_new_user(self, acsuser):
@@ -104,20 +106,28 @@ class dataBaseDriver:
                 self.db_driver.execute_query(privileges_query)
             except pymysql.err.MySQLError:
                 return None
-        self.db_driver.execute_query(sql, insert_tuple)
+        return self.db_driver.execute_query(sql, insert_tuple)
 
       # insert facility
     def insert_new_facility(self, acsfacility):
         sql = "INSERT INTO `facilities` (`name`) VALUES (%s)"
         insert_tuple = (acsfacility.get_name())
-        self.db_driver.execute_query(sql, insert_tuple)
+        return self.db_driver.execute_query(sql, insert_tuple)
 
     # link group and facility
     def give_access(self, acsaccess):
         sql = "INSERT INTO `access` (`group_number`,`facility_name`) VALUES (%s,%s)"
         insert_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
-        self.db_driver.execute_query(sql, insert_tuple)
+        return self.db_driver.execute_query(sql, insert_tuple)
     
+    def retrieve_all_users (self):
+        if self.db_owner != 'root':
+            return None
+        else:
+            sql = "SELECT `id`,`name`, `MAC`, `username`,`group_number` FROM `users`"
+            result = self.db_driver.execute_query(sql)
+            return result
+
     # user info
     def retrieve_info_from_username (self, username):
         sql = "SELECT `id`,`name`, `MAC`, `username`,`group_number` FROM `users` WHERE `username`=%s"
@@ -138,6 +148,12 @@ class dataBaseDriver:
         result = self.db_driver.execute_query(sql, select_tuple)
         return result
 
+    def retrieve_my_info (self, MAC):
+        sql = "SELECT `id`,`name`, `MAC`, `username`,`group_number` FROM `users` WHERE `MAC`=%s"
+        select_tuple = (MAC)
+        result = self.db_driver.execute_query(sql, select_tuple)
+        return result
+
     # password must be already encrypted (bytes)
     def add_user_info(self, acsuser):
         username = acsuser.get_username()
@@ -154,7 +170,7 @@ class dataBaseDriver:
                 self.db_driver.execute_query(privileges_query)
             except pymysql.err.MySQLError:
                 return None
-        self.db_driver.execute_query(sql, update_tuple)
+        return self.db_driver.execute_query(sql, update_tuple)
 
     # admin may edit any attribute
     def edit_user(self, acsuser):
@@ -172,19 +188,19 @@ class dataBaseDriver:
                 self.db_driver.execute_query(privileges_query)
             except pymysql.err.MySQLError:
                 return None
-        self.db_driver.execute_query(sql, update_tuple)
+        return self.db_driver.execute_query(sql, update_tuple)
 
     # admin can remove access from a group
     def remove_access(self, acsaccess):
         sql = "DELETE FROM `access` WHERE `group_number`=%s AND `facility_name`=%s"
         delete_tuple = (acsaccess.get_group_number(),acsaccess.get_facility_name())
-        self.db_driver.execute_query(sql, delete_tuple)
+        return self.db_driver.execute_query(sql, delete_tuple)
 
     # admin can remove group
     def remove_group(self, acsgroup):
         sql = "DELETE FROM `groups` WHERE `number`=%s"
         delete_tuple = (acsgroup.get_number())
-        self.db_driver.execute_query(sql, delete_tuple)
+        return self.db_driver.execute_query(sql, delete_tuple)
 
     # admin can remove user
     def remove_user(self, acsuser):
@@ -199,16 +215,16 @@ class dataBaseDriver:
                 self.db_driver.execute_query(drop_query)
             except pymysql.err.MySQLError:
                 return None
-        self.db_driver.execute_query(sql, delete_tuple)
+        return self.db_driver.execute_query(sql, delete_tuple)
 
     # admin can remove facility
     def remove_facility(self, acsfacility):
         sql = "DELETE FROM `facilities` WHERE `name`=%s"
         delete_tuple = (acsfacility.get_name())
-        self.db_driver.execute_query(sql, delete_tuple)
+        return self.db_driver.execute_query(sql, delete_tuple)
 
     # change group description
     def change_group_description(self, acsgroup):
         sql = "UPDATE `groups` SET `description`=%s where `number`=%s"
         update_tuple = (acsgroup.get_description(),acsgroup.get_number())
-        self.db_driver.execute_query(sql, update_tuple)
+        return self.db_driver.execute_query(sql, update_tuple)
