@@ -136,18 +136,15 @@ def setup_packages ():
 
 def make_c_files ():
     build_logger.info('Making C files...')
+    my_env = os.environ.get('PYTHONPATH')
+    build_folder = os.path.join(my_env, 'src', 'build')
+    os.chdir(build_folder)
     if args.clean:
         _call_std_subprocess(['make', '--quiet', 'clean'])
     elif not args.clean:
         _call_std_subprocess(['make', '--quiet'])
     else:
         build_logger.info('C files built up!')
-
-def check_folder ():
-    dirname = re.match('(.*\/Access-Control-System\/src\/build)', os.getcwd())
-    if dirname is None:
-        build_logger.error('Build must be done from src/build.')
-        exit(1)
 
 def install_data_base ():
     print('Setting up database for root.')
@@ -183,7 +180,8 @@ def install_data_base ():
             root.stdin.close()
             root.wait()
 
-    SQL_querry = '../database_setup/setup.sql'
+    my_env = os.environ.get('PYTHONPATH')
+    SQL_querry = os.path.join(my_env, 'src', 'database_setup', 'setup.sql')
     mysql_cmd = 'mysql -u root -p' + password + ' < ' + SQL_querry
     try:
         setup = subprocess.run(mysql_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -200,7 +198,6 @@ args = arg_parser()
 build_logger = create_logger()
 
 def main ():
-    check_folder()
     setup_packages()
     make_c_files()
     install_data_base()
