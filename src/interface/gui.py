@@ -16,8 +16,13 @@ class GUI ():
             self.login_msg['text'] = 'Wrong username or password.'
         else:
             self.user_type = username
-            self.user_login.destroy()
-            return
+            try:
+                self.user_login.destroy()
+            # This happens when you try login without instantiating a tk "window"
+            except AttributeError:
+                exit (0)
+            else:
+                return
 
     def execute_command (self, command_str):
         try:
@@ -86,7 +91,11 @@ class GUI ():
         
         self.user_login.mainloop()
 
-        return self.user_type
+        try:
+            return self.user_type
+        # This happens if user closes window out of nowhere
+        except AttributeError:
+            exit (0)
 
     def load_root_page (self):
 
