@@ -194,7 +194,10 @@ def install_data_base ():
     root_user = accessControlUser.acsuser(str(root_name), root_MAC, 'root', str(password))
     data_base_connect.insert_new_user(root_user)
 
-args = arg_parser()
+try:
+    args = arg_parser()
+except:
+    args = argparse.Namespace(clean=False, debug=False, verbose=False)
 build_logger = create_logger()
 
 def main ():
